@@ -792,7 +792,7 @@
     Next, we simplify the conditional probability of action $A_{t} = a$ conditioned on the states $S_{t} = \texttt{H}$ and $S_{t+1} = \texttt{S}$.
     \begin{align*}
         P[A_{t} = a | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] &= \frac{P[A_{t} = a, S_{t+1} = \texttt{S} | S_{t} = \texttt{H}]}{P[S_{t+1} = \texttt{S} | S_{t} = \texttt{H}]} \\
-        &= \frac{P[A_{t} = a | S_{t} = \texttt{H}] \ P[S_{t+1} = \texttt{S} | S_{t} = \texttt{H}, A_{t} = a]}{\sum_{\hat{a} \in \mathcal{A}(\texttt{H})} P[A_{t} = a, S_{t+1} = \texttt{S} | S_{t} = \texttt{H}]} \\
+        &= \frac{P[A_{t} = a | S_{t} = \texttt{H}] \ P[S_{t+1} = \texttt{S} | S_{t} = \texttt{H}, A_{t} = a]}{\sum_{\hat{a} \in \mathcal{A}(\texttt{H})} P[A_{t} = \hat{a}, S_{t+1} = \texttt{S} | S_{t} = \texttt{H}]} \\
         &= \frac{\pi(a \ | \ \texttt{H}) \ p(\texttt{S} \ | \ \texttt{H}, a)}{\sum_{\hat{a} \in \mathcal{A}(\texttt{H})} \pi(\hat{a} \ | \ \texttt{H}) \ p(\texttt{S} \ | \ \texttt{H}, \hat{a})} \\
         &= \frac{p(\texttt{S} \ | \ \texttt{H}, a)}{p(\texttt{S} \ | \ \texttt{H}, \texttt{GO}) + p(\texttt{S} \ | \ \texttt{H}, \texttt{SH})} \quad \text{ since $\pi$ is an equiprobable random policy} \\
         &= \frac{p(\texttt{S} \ | \ \texttt{H}, a)}{0.3 + 0.05} = \frac{p(\texttt{S} \ | \ \texttt{H}, a)}{0.35}
