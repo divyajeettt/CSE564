@@ -1,0 +1,896 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{array}
+
+
+\title{
+    \textbf{CSE564: Reinforcement Learning} \\ \vspace*{-5pt}
+    \textbf{\large{Assignment-2}}
+}
+
+\author{\href{mailto:divyajeet21529@iiitd.ac.in}{Divyajeet Singh (2021529)}}
+\date{\today}
+
+\geometry{a4paper, left=20mm, right=20mm, top=20mm, bottom=20mm}
+
+
+\begin{document}
+    \maketitle
+
+    \section*{Question-1}
+    Consider ten bandit arms numbered $1, 2, \hdots, 10$. You pick an even numbered arm with
+    probability twice that of picking an odd arm. Arm $i$ gives a reward that is drawn from $N[i, 1]$.
+    You pick an arm with this policy 10 times. Derive from first principles the expected sum reward
+    at the end of picking ten times.
+
+    \subsection*{Solution}
+    According to the given policy, say $\pi$, let the probability of picking an odd arm be $p$. Then,
+    \begin{align*}
+        5p + 5 \cdot 2p &= 1 \implies p = \frac{1}{15} \\
+        P[A_{t} = a] &= \pi(a) = \begin{cases}
+            \frac{2}{15} & \text{if } a \bmod 2 = 0 \\
+            \frac{1}{15} & \text{if } a \bmod 2 = 1 \\
+            0 & \text{otherwise}
+        \end{cases}
+    \end{align*}
+    The expected sum reward at the end of picking ten times is given by,
+    \begin{align*}
+        \mathbb{E} \left[ \sum_{t=1}^{10} R_{t} \right] &= \sum_{t=1}^{10} \mathbb{E}[R_{t}] \\
+        &= \sum_{t=1}^{10} \sum_{a=1}^{10} \mathbb{E}[R_{t} | A_{t} = a] P[A_{t} = a] \\
+        &= \sum_{t=1}^{10} \sum_{a=1}^{10} \pi(a) \mathbb{E}[N[a, 1]]
+         = \sum_{t=1}^{10} \sum_{a=1}^{10} a\pi(a) \\
+        &= \sum_{t=1}^{10} \left[ \frac{1}{15} \cdot (1 + 3 + 5 + 7 + 9) + \frac{2}{15} \cdot (2 + 4 + 6 + 8 + 10) \right] \\
+        &= \sum_{t=1}^{10} \left[ \frac{25}{15} + \frac{60}{15} \right] = \frac{85}{15} \cdot 10
+         = \frac{170}{3} \approx 56.667
+    \end{align*}
+
+    \section*{Question-2}
+    We have 10 arms. Arms 1, 2, 4, 5, 7, 9, and 10 give a reward 0 with probability 0.5
+    and reward of 1 otherwise. The other arms give a reward of 0 with probability 0.3, a reward of
+    0.2 with probability 0.3, and a reward of 1 with probability 0.4. As always, you want to
+    maximize the expected reward. Derive six optimal policies.
+
+    \subsection*{Solution}
+    Let sets $A_{1} = \{ 1, 2, 4, 5, 7, 9 \}$ and $A_{2} = \{ 3, 6, 8 \}$. Then, given the
+    information about the rewards from each arm, we have
+    \begin{align*}
+        P[R = r | A \in A_{1}] &= \begin{cases}
+            0.5 & \text{if } r = 0, 1 \\
+            0 & \text{otherwise}
+        \end{cases}
+        \qquad \implies \mathbb{E}[R | A \in A_{1}] = 0.5 \\
+        P[R = r | A \in A_{2}] &= \begin{cases}
+            0.3 & \text{if } r = 0, 0.2 \\
+            0.4 & \text{if } r = 1 \\
+            0 & \text{otherwise}
+        \end{cases}
+        \quad \implies \mathbb{E}[R | A \in A_{2}] = 0.46
+    \end{align*}
+    It is easy to observe that the expected reward is more if the arms in $A_{1}$ are picked.
+    So, we can derive the following (non-exhaustive) optimal policies.
+    \begin{align*}
+        P[A = a] &= \begin{cases} 0.5 & \text{if } a = 1, 2 \\ 0 & \text{otherwise} \end{cases}
+        &P[A = a] &= \begin{cases} 0.5 & \text{if } a = 2, 4 \\ 0 & \text{otherwise} \end{cases} \\
+        P[A = a] &= \begin{cases} 0.5 & \text{if } a = 4, 5 \\ 0 & \text{otherwise} \end{cases}
+        &P[A = a] &= \begin{cases} 0.5 & \text{if } a = 5, 7 \\ 0 & \text{otherwise} \end{cases} \\
+        P[A = a] &= \begin{cases} 0.5 & \text{if } a = 7, 9 \\ 0 & \text{otherwise} \end{cases}
+        &P[A = a] &= \begin{cases} 0..5 & \text{if } a = 9, 1 \\ 0 & \text{otherwise} \end{cases}
+    \end{align*}
+    In fact, any policy $\pi_{*}$ that picks only the actions in $A_{1}$ with non-zero probability
+    is an optimal policy.
+
+    \section*{Question-3}
+    Consider a variant of the $\epsilon$-greedy policy wherein we explore only over the non-greedy
+    actions. Suppose that we have 3 bandit arms. Each arm gives a random reward that takes a value
+    from the set $\{ 0, 1 \}$. Assume an initial estimate of $Q_{1}(a), a \in \{ 1, 2, 3 \}$. Choose
+    the initial estimates to be different and non-zero for the arms. Create and explain an example
+    sequence of $Q_{t}(a)$, $A_{t}$, and $R_{t}$, for $t = 1, 2, 3, 4, 5, 6$, obtained under the assumption
+    that you explore at odd times and exploit at even times. Use sample mean estimates.
+
+    \subsection*{Solution}
+    An example sequence of $Q_{t}(a)$, $A_{t}$, and $R_{t}$ is given in the Table \ref{tab:example}.
+    \begin{table}[ht]
+        \centering
+        \renewcommand{\arraystretch}{1.5}
+        \begin{tabular}{cl|cc|ccc}
+            $t$ & \textbf{Action} & $A_{t}$ & $R_{t}$ & $Q_{t}(1)$ & $Q_{t}(2)$ & $Q_{t}(3)$ \\
+            \hline
+            $t = 1$ & - & - & - & 1 & -3 & 4 \\
+            $t = 2$ & \texttt{Exploit} & 3 & 0 & 1 & -3 & 0 \\
+            $t = 3$ & \texttt{Explore} & 3 & 1 & 1 & -3 & $\frac{1+0}{2} = 0.5$ \\
+            $t = 4$ & \texttt{Exploit} & 1 & 1 & $\frac{1+1}{2} = 1$ & -3 & 0.5 \\
+            $t = 5$ & \texttt{Explore} & 2 & 0 & 1 & 0 & 0.5 \\
+            $t = 6$ & \texttt{Exploit} & 1 & 0 & $\frac{1+1+0}{3} = \frac{2}{3}$ & 0 & 0.5 \\
+        \end{tabular}
+        \caption{Example sequence of $Q_{t}(a)$, $A_{t}$, and $R_{t}$}
+        \label{tab:example}
+    \end{table}
+    It was assumed that the initial estimates of the arms are 1, -3, and 4 respectively. As estimates
+    are obtained for the arm, the inital estimates are discarded and then the sample mean estimates
+    are used. The arm with the highest estimate at $t = t_{0}$ is used for exploitation at $t = t_{0}+1$,
+    i.e. $a = \arg\max_{a} Q_{t_{0}}(a)$ is used as the greedy arm. The other two arms are used for
+    exploration in the odd time steps.
+
+    \section*{Question-4}
+    Solve Exercise 3.4 and explain how you obtained the table.
+
+    \subsection*{Solution}
+    According to the MDP table given in Example 3.3, the solution to Exercise 3.4 is Table
+    \ref{tab:mdp-cleaning-robot}. It was obtained by observing the probabilities of each state transition
+    $(s, a)$ to a state $s'$ with reward $r$ in the given MDP. In the table in Example 3.3, the same
+    values can be seen as we fixed $(s, a, s')$ tuples, which could only give rewards from a fixed set.
+    \begin{table}[ht]
+        \centering
+        \renewcommand{\arraystretch}{1.25}
+        \begin{tabular}{llll|l}
+            $s$ & $a$ & $s'$ & $r$ & $p(s', r | s, a)$ \\
+            \hline
+            \texttt{high} & \texttt{search} & \texttt{high} & $r_{\texttt{search}}$ & $\alpha$  \\
+            \texttt{high} & \texttt{search} & \texttt{low} & $r_{\texttt{search}}$ & $1 - \alpha$ \\
+            \texttt{high} & \texttt{wait} & \texttt{high} & $r_{\texttt{wait}}$ & 1 \\
+            \texttt{low} & \texttt{search} & \texttt{high} & -3 & $1 - \beta$ \\
+            \texttt{low} & \texttt{search} & \texttt{low} & $r_{\texttt{search}}$ & $\beta$ \\
+            \texttt{low} & \texttt{wait} & \texttt{low} & $r_{\texttt{wait}}$ & 1 \\
+            \texttt{low} & \texttt{recharge} & \texttt{high} & 0 & 1 \\
+        \end{tabular}
+        \caption{The MDP of state-transition probabilities for the Cleaning Robot Problem}
+        \label{tab:mdp-cleaning-robot}
+    \end{table}
+    \vspace*{0pt} \\
+    This has the same effects of renaming the columns $r(s, a, s')$ to $r$ and $p(s' | s, a)$ to
+    $p(s', r | s, a)$, because in this simple problem, there are no other rewards that can
+    be obtained from a $(s, a, s')$ tuple, i.e., only a deterministic reward is obtained when
+    transitioning from a state $s$ to another state $s'$ using action $a$.
+
+    \section*{Question-5}
+    Write code that solves the linear equations required to find $v_{\pi}(s)$ and generate the values in
+    the table in Figure 3.2. Note that the policy $\pi$ picks all valid actions in a state with equal
+    probability. Add comments in your code that explain all the steps.
+
+    \subsection*{Solution}
+    The solution to the linear equations required to find $v_{\pi}(s)$ can be found using the dynamic
+    programming policy evaluation technique. The solution for this is given in \texttt{main.ipynb}.
+
+    \section*{Question-6}
+    Solve Exercises 3.15 and 3.16.
+
+    \subsection*{Solution}
+    \subsubsection*{Exercise 3.15}
+    In the Grid-World problem, the signs of the rewards are not relevant. It is the intervals between the
+    \textit{good} rewards and \textit{bad} rewards that matter. According to (3.8) in the text,
+    $$G_{t} \doteq R_{t+1} + \gamma R_{t+2} + \gamma^{2} R_{t+3} + \cdots = \sum_{k=0}^{\infty} \gamma^{k} R_{t+k+1}$$
+    Now we add a constant $c$ to all rewards, then our new discounted return $G_{t}'$ becomes
+    \begin{align*}
+        G_{t}' = \sum_{k=0}^{\infty} \gamma^{k} \cdot ( R_{t+k+1} + c )
+        &= G_{t} + \sum_{k=0}^{\infty} \gamma^{k} c \\
+        &= G_{t} + c \sum_{k=0}^{\infty} \gamma^{k} = G_{t} + c \cdot \frac{1}{1 - \gamma} = G_{t} + v_{c}
+    \end{align*}
+    This proves that adding a constant to all returns adds a constant value to the return value. The
+    value of this constant, $v_{c}$, in terms of $c$ and $\gamma$ is
+    $$v_{c} = \frac{c}{1 - \gamma}$$
+    This can be used to calculate the value function for all states (in the Grid-World problem).
+    For all $s \in \mathcal{S}$,
+    $$v_{\pi}'(s) = \mathbb{E}[G_{t}' | S_{t} = s] = \mathbb{E}[G_{t} + v_{c} | S_{t} = s]
+    = \mathbb{E}[G_{t} | S_{t} = s] + v_{c} = v_{\pi}(s) + v_{c}$$
+    Hence, even the values get shifted by the same constant. Since the policy depends on these state-values
+    and the relative difference among them is the same, the policy behaves in the same way. This reinforces
+    the claim that the signs of the rewards are not important.
+
+    \subsubsection*{Exercise 3.16}
+    Adding a constant $c$ to the rewards in an episodic task, i.e. without discounting can very well
+    change the learning task. Negative rewards are used to penalize being in an undersirable state.
+    A negative reward also suggests the agent to try and accelerate finishing the task. This is because
+    a negative reward lowers the expected return, but even a small positive reward increases it. \\
+    Let's say two policies $\pi_{1}$ and $\pi_{2}$ with the same total reward generate episodes of length
+    $L_{1}$ and $L_{2}$ each such that $L_{1} > L_{2}$. Adding a constant $c$ to all rewards would increase
+    the return of $\pi_{1}$ by $L_{1}c$, which is more than the increase $L_{2}c$ in $\pi_{2}$. This
+    would make our agent prefer the policy that generates longer runs. So, the sign of the rewards in
+    an episodic task is important.
+
+    \section*{Question-7}
+    Write code that generates the optimal state-value function and the optimal policy for Figure 3.5.
+    You want to solve the corresponding system of non-linear equations. Explain all the steps.
+
+    \subsection*{Solution}
+    To solve the non-linear equations, we use the policy iteration technique. The solution for this is given
+    in \texttt{main.ipynb}. Within each iteration, the current policy is evaluated
+    by finding its state-values, and then improve upon the policy in a greedy way. This is repeated until
+    the policy converges to the optimal policy.
+
+    \section*{Question-8}
+    Give an equation for $v_{*}$ in terms of $q_{*}$.
+
+    \subsection*{Solution}
+    By definition, the optimal value of a state is given by the maximum of optimal values of all the
+    actions possible in that state. Thus,
+    $$v_{*}(s) = \max_{a \in \mathcal{A}(s)} q_{*}(s, a) \quad \forall s \in \mathcal{S}$$
+
+    \section*{Question-9}
+    Code policy iteration (PI) and value iteration (VI) to solve the Grid-World problem in Example 4.1.
+    Your code must log the output of each iteration. Pick up a few sample iterations to show policy
+    evaluation and PI at work. Similarly, show using a few obtained iterations that every iteration of VI
+    improves the value function. Your code must include the fix to the bug mentioned in Exercise 4.4.
+
+    \subsection*{Solution}
+    The bug in the given pseudocode was that it may never converge. This was because it may get stuck
+    shuffling between two equally optimal policies, which is likely to occur in practice. To fix this, we
+    can fix which of the equally optimal actions to select in each state. For example, instead of breaking
+    ties arbitrarily, we can always select the action that has the smallest index. \\
+    Exactly this fix was used in the solution using \texttt{numpy.argmax()}, which returns the index of
+    the first occurrence of the maximum value in the array. The solution for this is given in the code
+    in \texttt{main.ipynb}.
+
+    \section*{Question-10}
+    Code Exercise 4.7.
+
+    \subsection*{Solution}
+    The solution for Jack's Car Rental problem is given in \texttt{main.ipynb}. The solution uses the policy
+    iteration technique to find the optimal policy for the given problem. The state-values are found by simply
+    summing over all possible next states to calculate the expected value of the return.
+
+    \section*{Question-11}
+    When we defined a Markov Decision Process, we explicitly captured, using probability mass functions, the fact
+    that the random variable $R_{t+1}$ is dependent on the state $S_{t}$ and the action $A_{t}$. Is the random
+    variable $R_{t+2}$ dependent on $S_{t}$ and $A_{t}$? Support your answer using the PMFs used to define an MDP.
+
+    \subsection*{Solution}
+    To find out whether $R_{t+2}$ is dependent on $S_{t}$ and $A_{t}$, we consider the conditional PMF of $R_{t+2}$
+    conditioned on $S_{t}$ and $A_{t}$. Let $s \in \mathcal{S}$ and $a \in \mathcal{A}(s)$. Then,
+    \begin{align*}
+        P_{R_{t+2} | S_{t}, A_{t}}(r' | s, a) &= P[R_{t+2} = r' | S_{t} = s, A_{t} = a] \\
+        &= \sum_{s'} P[R_{t+2} = r', S_{t+1} = s' | S_{t} = s, A_{t} = a] \\
+        &= \sum_{s'} P[R_{t+2} = r' | S_{t+1} = s', S_{t} = s, A_{t} = a] P[S_{t+1} = s' | S_{t} = s, A_{t} = a]
+    \end{align*}
+    By Markov property, $S_{t+1}$ is a complete description required at time $t+1$, and any more information is
+    redundant. Thus, we follow
+    \begin{align*}
+        P_{R_{t+2} | S_{t}, A_{t}}(r' | s, a) &= \sum_{s'} P[R_{t+2} = r' | S_{t+1} = s'] P[S_{t+1} = s' | S_{t} = s, A_{t} = a] \\
+        &= \sum_{s'} P[R_{t+2} = r' | S_{t+1} = s'] \sum_{r} P[S_{t+1} = s', R_{t+1} = r | S_{t} = s, A_{t} = a] \\
+        &= \sum_{s', r} P[R_{t+2} = r' | S_{t+1} = s'] p(s', r | s, a) \\
+        &= \sum_{s', r} \sum_{s''} P[R_{t+2} = r', S_{t+2} = s'' | S_{t+1} = s'] p(s', r | s, a)
+    \end{align*}
+    \begin{align*}
+        &= \sum_{s'', s', r} \sum_{a'} P[R_{t+2} = r', S_{t+2} = s'', A_{t+1} = a' | S_{t+1} = s'] p(s', r | s, a) \\
+        &= \sum_{s'', s', a', r} P[R_{t+2} = r', S_{t+2} = s'' | S_{t+1} = s', A_{t+1} = a'] P[A_{t+1} = a' | S_{t+1} = s'] p(s', r | s, a) \\
+        &= \sum_{s'', s', a', r} p(s'', r' | s', a') \pi(a' | s')  p(s', r | s, a)
+    \end{align*}
+    By the above equations\footnote{
+        \textbf{Abuse of Notation:} It is implicit that $s', s'' \in \mathcal{S}$, $a' \in \mathcal{A}(s')$,
+        and $r, r' \in \mathcal{R}$. Moreover, the summations are over all possible values of the variables under them.
+    }, it is easy to notice that $R_{t+2}$ is dependent on $A_{t+1}$ and $S_{t+1}$, which in turn
+    are dependent on $A_{t}$ and $S_{t}$. So, $R_{t+2}$ is dependent on $A_{t}$ and $S_{t}$.
+
+    \section*{Question-12}
+    Derive the expression for $\mathbb{E}[R_{t+2} | S_{t} = s, A_{t} = a]$ in terms of the PMF(s) that define
+    an MDP.
+
+    \subsection*{Solution}
+    We use first principles to find the expected value of $R_{t+2}$ conditioned on $S_{t} = s$ and $A_{t} = a$.
+    $$\mathbb{E}[R_{t+2} | S_{t} = s, A_{t} = a] = \sum_{r'} r' P[R_{t+2} = r' | S_{t} = s, A_{t} = a]$$
+    Using the conditional PMF of $R_{t+2}$ conditioned on $S_{t} = s$ and $A_{t} = a$ from the final result of
+    Question-11, the expectation becomes
+    $$\mathbb{E}[R_{t+2} | S_{t} = s, A_{t} = a] = \sum_{s'', s', a', r', r} r' p(s'', r' | s', a') \pi(a' | s')  p(s', r | s, a)$$
+
+    \section*{Question-13}
+    We know that the state-value function $v_{\pi}(s) = \mathbb{E}[G_{t} | S_{t} = s]$. Use this definition of
+    $v_{\pi}(s)$ to derive the Bellman equation for $v_{\pi}(s)$ for all $s \in \mathcal{S}$. The Bellman equation
+    will use the PMF corresponding to the policy $\pi$ and the PMF $p(s', r | s, a)$ and will provide a recursive
+    method of calculating $v_{\pi}(s)$.
+
+    \subsection*{Solution}
+    We start with the given equation and derive the recursive form of the Bellman equation.
+    \begin{align*}
+        v_{\pi}(s) &= \mathbb{E}[G_{t} | S_{t} = s] \\
+        &= \mathbb{E}[R_{t+1} + \gamma G_{t+1} | S_{t} = s] \\
+        &= \mathbb{E}[R_{t+1} | S_{t} = s] + \gamma \mathbb{E}[G_{t+1} | S_{t} = s] \\
+        &= \mathbb{E}[R_{t+1} | S_{t} = s] + \gamma \sum_{g'} g' P[G_{t+1} = g' | S_{t} = s] \\
+        &= \mathbb{E}[R_{t+1} | S_{t} = s] + \gamma \sum_{g', s'} g' P[G_{t+1} = g', S_{t+1} = s' | S_{t} = s] \\
+        &= \mathbb{E}[R_{t+1} | S_{t} = s] + \gamma \sum_{g', s'} g' P[G_{t+1} = g' | S_{t+1} = s'] P[S_{t} = s | S_{t} = s'] \\
+        &= \mathbb{E}[R_{t+1} | S_{t} = s] + \gamma \sum_{s'} v_{\pi}(s') P[S_{t} = s' | S_{t} = s] \\
+        &= \mathbb{E}[R_{t+1} | S_{t} = s] + \gamma \mathbb{E}[v_{\pi}(S_{t+1}) | S_{t} = s]
+    \end{align*}
+    We again get a sum of two scaled expectations. So, we get
+    \begin{align*}
+        v_{\pi}(s) &= \mathbb{E}[R_{t+1} + \gamma v_{\pi}(S_{t+1}) | S_{t} = s] \\
+        &= \sum_{s', r} \left[ r + \gamma v_{\pi}(s') \right] P[S_{t+1} = s', R_{t+1} = r | S_{t} = s] \\
+        &= \sum_{s', r, a} \left[ r + \gamma v_{\pi}(s') \right] P[S_{t+1} = s', R_{t+1} = r, A_{t} = a | S_{t} = s] \\
+        &= \sum_{s', r, a} \left[ r + \gamma v_{\pi}(s') \right] P[S_{t+1} = s', R_{t+1} = r | S_{t} = s, A_{t} = a] P[A_{t} = a | S_{t} = s] \\
+        &= \sum_{s', r, a} \left[ r + \gamma v_{\pi}(s') \right] p(s', r | s, a) \pi(a | s)
+    \end{align*}
+    The above equations hold true for each state $s \in \mathcal{S}$.
+
+    \section*{Question-14}
+    Suppoes an agent receives the sequence of rewards $R_{1} = 2$, $R_{2} = -1$, $R_{3} = 10$, and $R_{4} = -3$.
+    Calculate the $\gamma$-discounted return/reward for each step for $\gamma = 0.5$. Also, show that, if agent
+    receives a constant reward $c$, at every time step, for $\gamma < 1$, the infinite horizon discounted return
+    is given by
+    $$G_{t} = \frac{c}{1 - \gamma}$$
+
+    \subsection*{Solution}
+    We start from the last received reward. The $\gamma$-discounted return/reward for each step is given by
+    \begin{align*}
+        G_{3} &= R_{4} = -3 \\
+        G_{2} &= R_{3} + \gamma G_{3} = 10 + 0.5 \cdot (-3) = 8.5 \\
+        G_{1} &= R_{2} + \gamma G_{2} = -1 + 0.5 \cdot 8.5 = 3.25 \\
+        G_{0} &= R_{1} + \gamma G_{1} = 2 + 0.5 \cdot 3.25 = 3.625
+    \end{align*}
+    Now, we assume that the agent receives a constant reward $c$ at every time step, given that $\gamma < 1$.
+    Then, the infinite horizon discounted return is given by
+    \begin{align*}
+        G_{t} &= R_{t+1} + \gamma R_{t+2} + \gamma^{2} R_{t+3} + \cdots \\
+        &= \sum_{k=0}^{\infty} \gamma^{k} R_{t+k+1} = c \sum_{k=0}^{\infty} \gamma^{k} = \frac{c}{1 - \gamma}
+    \end{align*}
+    This proves the claim.
+
+    \section*{Question-15}
+    Suppose you are given the optimal state-value function $v_{*}(s)$, for all $s \in \mathcal{S}$. How will you
+    find the optimal policy? Show your steps.
+
+    \subsection*{Solution}
+    An optimal policy, $\pi_{*}$, is a policy that always picks the action with the highest value in each state.
+    So, to pick an action using the state values, we can use the following equation.
+    \begin{align*}
+        \pi_{*}(s) &= \underset{a \in \mathcal{A}(s)}{\mathrm{argmax}} \ q_{*}(s, a) \\
+        &= \underset{a \in \mathcal{A}(s)}{\mathrm{argmax}} \ \mathbb{E}[R_{t+1} + \gamma v_{*}(S_{t+1}) | S_{t} = s, A_{t} = a] \\
+        &= \underset{a \in \mathcal{A}(s)}{\mathrm{argmax}} \ \sum_{s', r} \left[ r + \gamma v_{*}(s') \right] p(s', r | s, a)
+    \end{align*}
+    where $q_{*}(s, a)$ is the optimal action-value function.
+
+    \section*{Question-16}
+    Problem too long to dump here.
+
+    \subsection*{Solution}
+    \subsubsection*{1}
+    The set of states $\mathcal{S} = \{ \texttt{fresh}, \texttt{stale} \}$ and actions
+    $\mathcal{A} = \{ \texttt{query}, \texttt{stay silent} \}$. So, the given MDP can be tabulated as follows.
+    \begin{table}[ht]
+        \centering
+        \renewcommand{\arraystretch}{1.25}
+        \begin{tabular}{lllc|c}
+            $s$ & $a$ & $s'$ & $r$ & $p(s', r | s, a)$ \\
+            \hline
+            \texttt{fresh} & \texttt{stay} & \texttt{fresh} & +4 & 0.5  \\
+            \texttt{fresh} & \texttt{stay} & \texttt{stale} & +4 & 0.5 \\
+            \texttt{fresh} & \texttt{query} & \texttt{fresh} & -4 & 0.9 \\
+            \texttt{fresh} & \texttt{query} & \texttt{stale} & -4 & 0.1 \\
+            \texttt{stale} & \texttt{stay} & \texttt{fresh} & - & 0.0 \\
+            \texttt{stale} & \texttt{stay} & \texttt{stale} & +4 & 1.0 \\
+            \texttt{stale} & \texttt{query} & \texttt{fresh} & -8 & 0.8 \\
+            \texttt{stale} & \texttt{query} & \texttt{stale} & -8 & 0.2 \\
+        \end{tabular}
+        \caption{The MDP table for the Server Query Problem}
+        \label{tab:mdp-query-server}
+    \end{table}
+
+    \subsubsection*{2}
+    The future rewards are discounted with a factor of $\gamma = 0.5$. The agent gets to optimize over three time steps. Given
+    the three time steps, we can calculate the optimal state values for each state for the time steps $t = 0, 1, 2, 3$ in
+    reverse order. Let $v_{t_{*}}(s)$ denote the optimal state value for state $s$ at time $t$. For brevity, we will also assume
+    \begin{align*}
+        \text{State } \texttt{S}_{\texttt{F}} &= \texttt{fresh} & \text{Action } \texttt{A}_{\texttt{Q}} &= \texttt{query} \\
+        \text{State } \texttt{S}_{\texttt{S}} &= \texttt{stale} & \text{Action } \texttt{A}_{\texttt{S}} &= \texttt{stay}
+    \end{align*}
+    At the terminal step $t = 3$, if the agent ends in $\texttt{S}_{\texttt{F}}$, then it gets a reward of +10, and if it ends in
+    $\texttt{S}_{\texttt{S}}$, then it gets a reward of -10. So,
+    \begin{align*}
+        v_{3_{*}}(\texttt{S}_{\texttt{F}}) &= +10 & v_{3_{*}}(\texttt{S}_{\texttt{S}}) &= -10
+    \end{align*}
+    For the other time steps, we repeatedly make use of the following formula
+    \begin{align*}
+        v_{t_{*}}(s) &= \max_{a \in \mathcal{A}(s)} q_{t}(s, a) &
+        \pi_{t_{*}}(s) &= \underset{a \in \mathcal{A}(s)}{\mathrm{argmax}} \ q_{t}(s, a) \\
+    \end{align*}
+    where we can calculate $q_{t}(s, a)$ as follows
+    \begin{align*}
+        q_{t}(s, a) &= \sum_{s', r} \left[ r + \gamma v_{{t+1}_{*}}(s') \right] p(s', r \ | \ s, a) \\
+        &= \sum_{r} r \ p(r \ | \ s, a) + \gamma \sum_{s'} v_{t}(s') \ p(s' \ | \ s, a) \\
+        &= r(s, a) + 0.5 \cdot \big[ v_{{t+1}_{*}}(\texttt{S}_{\texttt{F}}) \ p(\texttt{S}_{\texttt{F}} \ | \ s, a)
+        + v_{{t+1}_{*}}(\texttt{S}_{\texttt{S}}) \ p(\texttt{S}_{\texttt{S}} \ | \ s, a) \big]
+    \end{align*}
+    So, for time $t = 2$, we have
+    \begin{align*}
+        \pi_{2_{*}}(\texttt{S}_{\texttt{F}}) &= \underset{a \in \mathcal{A}(\texttt{S}_{\texttt{F}})}{\mathrm{argmax}} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -4 + 0.5 \cdot \big[ v_{3_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.9 + v_{3_{*}}(\texttt{S}_{\texttt{S}}) \cdot 0.1 \big] = 0.0 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{3_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{3_{*}}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big] = 4.0
+        \end{cases} \\
+        &= \texttt{A}_{\texttt{S}} & \implies v_{2_{*}}(\texttt{S}_{\texttt{F}}) &= 4.0 \\
+        \pi_{2_{*}}(\texttt{S}_{\texttt{S}}) &= \underset{a \in \mathcal{A}(\texttt{S}_{\texttt{S}})}{\mathrm{argmax}} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -8 + 0.5 \cdot \big[ v_{3_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.8 + v_{3_{*}}(\texttt{S}_{\texttt{S}}) \cdot 0.2 \big] = -5.0 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{3_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{3_{*}}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big] = -1.0
+        \end{cases} \\
+        &= \texttt{A}_{\texttt{S}} & \implies v_{2_{*}}(\texttt{S}_{\texttt{S}}) &= -1.0
+    \end{align*}
+    For time $t = 1$,
+    \begin{align*}
+        \pi_{1_{*}}(\texttt{S}_{\texttt{F}}) &= \underset{a \in \mathcal{A}(\texttt{S}_{\texttt{F}})}{\mathrm{argmax}} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -4 + 0.5 \cdot \big[ v_{2_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.9 + v_{2_{*}}(\texttt{S}_{\texttt{S}}) \cdot 0.1 \big] = -2.25 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{2_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{2_{*}}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big] = 4.75
+        \end{cases} \\
+        &= \texttt{A}_{\texttt{S}} & \implies v_{1_{*}}(\texttt{S}_{\texttt{F}}) &= 4.75 \\
+        \pi_{1_{*}}(\texttt{S}_{\texttt{S}}) &= \underset{a \in \mathcal{A}(\texttt{S}_{\texttt{S}})}{\mathrm{argmax}} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -8 + 0.5 \cdot \big[ v_{2_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.8 + v_{2_{*}}(\texttt{S}_{\texttt{S}}) \cdot 0.2 \big] = -6.5 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{2_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{2_{*}}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big] = 3.5
+        \end{cases} \\
+        &= \texttt{A}_{\texttt{S}} & \implies v_{1_{*}}(\texttt{S}_{\texttt{S}}) &= 3.5
+    \end{align*}
+    Finally, for time $t = 0$,
+    \begin{align*}
+        \pi_{0_{*}}(\texttt{S}_{\texttt{F}}) &= \underset{a \in \mathcal{A}(\texttt{S}_{\texttt{F}})}{\mathrm{argmax}} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -4 + 0.5 \cdot \big[ v_{1_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.9 + v_{1_{*}}(\texttt{S}_{\texttt{S}}) \cdot 0.1 \big] = -1.6875 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{1_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{1_{*}}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big] = 6.0625
+        \end{cases} \\
+        &= \texttt{A}_{\texttt{S}} & \implies v_{0_{*}}(\texttt{S}_{\texttt{F}}) &= 6.0625 \\
+        \pi_{0_{*}}(\texttt{S}_{\texttt{S}}) &= \underset{a \in \mathcal{A}(\texttt{S}_{\texttt{S}})}{\mathrm{argmax}} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -8 + 0.5 \cdot \big[ v_{1_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.8 + v_{1_{*}}(\texttt{S}_{\texttt{S}}) \cdot 0.2 \big] = -5.75 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{1_{*}}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{1_{*}}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big] = 5.75
+        \end{cases} \\
+        &= \texttt{A}_{\texttt{S}} & \implies v_{0_{*}}(\texttt{S}_{\texttt{S}}) &= 5.75
+    \end{align*}
+
+    \subsubsection*{3}
+    Now, we need to show upto 4 iterations of value iteration. The update rule for value iteration is given by
+    $$v_{k+1}(s) = \max_{a \in \mathcal{A}(s)} \sum_{s', r} \left[ r + \gamma v_{k}(s') \right] p(s', r \ | \ s, a)$$
+    Let us assume the initial values of the states to be 0. Then, for iteration 1
+    \begin{align*}
+        v_{1}(\texttt{S}_{\texttt{F}}) &= \max_{a \in \mathcal{A}(\texttt{S}_{\texttt{F}})} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -4 + 0.5 \cdot \big[ v_{0}(\texttt{S}_{\texttt{F}}) \cdot 0.9 + v_{0}(\texttt{S}_{\texttt{S}}) \cdot 0.1 \big] = -4.0 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{0}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{0}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big] = 4.0
+        \end{cases} \\
+        &= 4.0 \\
+        v_{1}(\texttt{S}_{\texttt{S}}) &= \max_{a \in \mathcal{A}(\texttt{S}_{\texttt{S}})} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -8 + 0.5 \cdot \big[ v_{0}(\texttt{S}_{\texttt{F}}) \cdot 0.8 + v_{0}(\texttt{S}_{\texttt{S}}) \cdot 0.2 \big] = -8.0 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{0}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{0}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big] = 4.0
+        \end{cases} \\
+        &= 4.0
+    \end{align*}
+    For iteration 2,
+    \begin{align*}
+        v_{2}(\texttt{S}_{\texttt{F}}) &= \max_{a \in \mathcal{A}(\texttt{S}_{\texttt{F}})} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -4 + 0.5 \cdot \big[ v_{1}(\texttt{S}_{\texttt{F}}) \cdot 0.9 + v_{1}(\texttt{S}_{\texttt{S}}) \cdot 0.1 \big] = -2.0 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{1}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{1}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big] = 6.0
+        \end{cases} \\
+        &= 6.0 \\
+        v_{2}(\texttt{S}_{\texttt{S}}) &= \max_{a \in \mathcal{A}(\texttt{S}_{\texttt{S}})} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -8 + 0.5 \cdot \big[ v_{1}(\texttt{S}_{\texttt{F}}) \cdot 0.8 + v_{1}(\texttt{S}_{\texttt{S}}) \cdot 0.2 \big] = -6.0 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{1}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{1}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big] = 6.0
+        \end{cases} \\
+        &= 6.0
+    \end{align*}
+    For iteration 3,
+    \begin{align*}
+        v_{3}(\texttt{S}_{\texttt{F}}) &= \max_{a \in \mathcal{A}(\texttt{S}_{\texttt{F}})} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -4 + 0.5 \cdot \big[ v_{2}(\texttt{S}_{\texttt{F}}) \cdot 0.9 + v_{2}(\texttt{S}_{\texttt{S}}) \cdot 0.1 \big] = -1.0 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{2}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{2}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big] = 7.0
+        \end{cases} \\
+        &= 7.0 \\
+        v_{3}(\texttt{S}_{\texttt{S}}) &= \max_{a \in \mathcal{A}(\texttt{S}_{\texttt{S}})} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -8 + 0.5 \cdot \big[ v_{2}(\texttt{S}_{\texttt{F}}) \cdot 0.8 + v_{2}(\texttt{S}_{\texttt{S}}) \cdot 0.2 \big] = -5.0 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{2}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{2}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big] = 7.0
+        \end{cases} \\
+        &= 7.0
+    \end{align*}
+    Finally, for iteration 4,
+    \begin{align*}
+        v_{4}(\texttt{S}_{\texttt{F}}) &= \max_{a \in \mathcal{A}(\texttt{S}_{\texttt{F}})} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -4 + 0.5 \cdot \big[ v_{2}(\texttt{S}_{\texttt{F}}) \cdot 0.9 + v_{2}(\texttt{S}_{\texttt{S}}) \cdot 0.1 \big] = -0.5 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{2}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{2}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big] = 7.5
+        \end{cases} \\
+        &= 7.5 \\
+        v_{4}(\texttt{S}_{\texttt{S}}) &= \max_{a \in \mathcal{A}(\texttt{S}_{\texttt{S}})} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -8 + 0.5 \cdot \big[ v_{2}(\texttt{S}_{\texttt{F}}) \cdot 0.8 + v_{2}(\texttt{S}_{\texttt{S}}) \cdot 0.2 \big] = -4.5 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{2}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{2}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big] = 7.0
+        \end{cases} \\
+        &= 7.5
+    \end{align*}
+    We can see that the values are converging. We must return an optimal policy at the end of value iteration. Clearly,
+    $$\pi_{4_{*}}(s) = \texttt{A}_{\texttt{S}} \quad s = \texttt{S}_{\texttt{F}}, \ \texttt{S}_{\texttt{S}}$$
+    Now, we do the same thing with policy iteration. We begin with an equiprobable random policy. We evaluate the policy
+    and then improve it. The following is the policy evaluation step for iteration 1.
+    \begin{align*}
+        v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) &= \pi_{0}(\texttt{A}_{\texttt{Q}} \ | \ \texttt{S}_{\texttt{F}}) \cdot \big[ -4 + 0.5 \cdot \big( v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) \cdot 0.9 + v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \cdot 0.1 \big) \big] \\
+        &+ \pi_{0}(\texttt{A}_{\texttt{S}} \ | \ \texttt{S}_{\texttt{F}}) \cdot \big[ +4 + 0.5 \cdot \big( v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big) \big] \\
+        &= 0.5 \cdot \big[ -4 + 0.45 v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) + 0.05 v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \big] + 0.5 \cdot \big[ +4 + 0.25 v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) + 0.25 v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \big] \\
+        &= -2 + 2 + (0.225 + 0.125) v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) + (0.025 + 0.125) v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \\
+        &= 0.35 v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) + 0.15 v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \\
+        v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) &= \pi_{0}(\texttt{A}_{\texttt{Q}} \ | \ \texttt{S}_{\texttt{S}}) \cdot \big[ -8 + 0.5 \cdot \big( v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) \cdot 0.8 + v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \cdot 0.2 \big) \big] \\
+        &+ \pi_{0}(\texttt{A}_{\texttt{S}} \ | \ \texttt{S}_{\texttt{S}}) \cdot \big[ +4 + 0.5 \cdot \big( v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big) \big] \\
+        &= 0.5 \cdot \big[ -8 + 0.4 v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) + 0.1 v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \big] + 0.5 \cdot \big[ +4 + 0.5 \cdot \big( v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \big) \big] \\
+        &= -4 + 2 + 0.2 v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) + (0.05 + 0.5) v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \\
+        &= 0.2 v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) + 0.55 v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) - 2
+    \end{align*}
+    Solving these equations, we get $v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) = -1.1$ and $v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) = -4.9$. Now, we improve the policy
+    \begin{align*}
+        \pi_{1}(\texttt{S}_{\texttt{F}}) &= \underset{a \in \mathcal{A}(\texttt{S}_{\texttt{F}})}{\mathrm{argmax}} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -4 + 0.5 \cdot \big[ v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) \cdot 0.9 + v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \cdot 0.1 \big] = -4.7 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big] = -2.5
+        \end{cases} \\
+        &= \texttt{A}_{\texttt{S}} \\
+        \pi_{1}(\texttt{S}_{\texttt{S}}) &= \underset{a \in \mathcal{A}(\texttt{S}_{\texttt{S}})}{\mathrm{argmax}} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -8 + 0.5 \cdot \big[ v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) \cdot 0.8 + v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \cdot 0.2 \big] = -8.9 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{\pi_{0}}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{\pi_{0}}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big] = 1.5
+        \end{cases} \\
+        &= \texttt{A}_{\texttt{S}}
+    \end{align*}
+    Now we have a deterministic policy $\pi_{1}$. We evaluate it again
+    \begin{align*}
+        v_{\pi_{1}}(\texttt{S}_{\texttt{F}}) &= \pi_{1}(\texttt{S}_{\texttt{F}}) \cdot \big[ +4 + 0.5 \cdot \big( v_{\pi_{1}}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{\pi_{1}}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big) \big] \\
+        &= 4 + 0.25 v_{\pi_{1}}(\texttt{S}_{\texttt{F}}) + 0.25 v_{\pi_{1}}(\texttt{S}_{\texttt{S}}) \\
+        v_{\pi_{1}}(\texttt{S}_{\texttt{S}}) &= \pi_{1}(\texttt{S}_{\texttt{S}}) \cdot \big[ +4 + 0.5 \cdot \big( v_{\pi_{1}}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{\pi_{1}}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big) \big] \\
+        &= 4 + 0.5 v_{\pi_{1}}(\texttt{S}_{\texttt{S}})
+    \end{align*}
+    Solving these equations, we get $v_{\pi_{1}}(\texttt{S}_{\texttt{F}}) = 8.0$ and $v_{\pi_{1}}(\texttt{S}_{\texttt{S}}) = 8.0$. Also, notice that
+    any deterministic policy that chooses $\pi_{k}(\texttt{S}_{\texttt{S}}) = \texttt{A}_{\texttt{S}}$ will give the same value for $\texttt{S}_{\texttt{S}}$.
+    Now, we improve the policy
+    \begin{align*}
+        \pi_{2}(\texttt{S}_{\texttt{F}}) &= \underset{a \in \mathcal{A}(\texttt{S}_{\texttt{F}})}{\mathrm{argmax}} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -4 + 0.5 \cdot \big[ v_{\pi_{1}}(\texttt{S}_{\texttt{F}}) \cdot 0.9 + v_{\pi_{1}}(\texttt{S}_{\texttt{S}}) \cdot 0.1 \big] = 0.0 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{\pi_{1}}(\texttt{S}_{\texttt{F}}) \cdot 0.5 + v_{\pi_{1}}(\texttt{S}_{\texttt{S}}) \cdot 0.5 \big] = 8.0
+        \end{cases} \\
+        &= \texttt{A}_{\texttt{S}} \\
+        \pi_{2}(\texttt{S}_{\texttt{S}}) &= \underset{a \in \mathcal{A}(\texttt{S}_{\texttt{S}})}{\mathrm{argmax}} \
+        \begin{cases}
+            \texttt{A}_{\texttt{Q}}: & -8 + 0.5 \cdot \big[ v_{\pi_{1}}(\texttt{S}_{\texttt{F}}) \cdot 0.8 + v_{\pi_{1}}(\texttt{S}_{\texttt{S}}) \cdot 0.2 \big] = -4.0 \\
+            \texttt{A}_{\texttt{S}}: & +4 + 0.5 \cdot \big[ v_{\pi_{1}}(\texttt{S}_{\texttt{F}}) \cdot 0.0 + v_{\pi_{1}}(\texttt{S}_{\texttt{S}}) \cdot 1.0 \big] = 8.0
+        \end{cases} \\
+        &= \texttt{A}_{\texttt{S}}
+    \end{align*}
+    We observe that $\pi_{2} = \pi_{1}$. Hence, this is the optimal policy, $\pi_{*}$, which was obtained in two iterations.
+
+    \section*{Question-17}
+    Assume an infinite horizon discounted costs problem. Prove that the policy impovement step either
+    improves the current policy or the current policy is optimal. Show all your steps and support them
+    using the properties of dynamic programming.
+
+    \subsection*{Solution}
+    The above given statement is the Policy Improvement Theorem. Let our current policy be $\pi_{k}$.
+    Then we need to show the following
+    \begin{align*}
+        v_{\pi_{k+1}}(s) &\geq v_{\pi_{k}}(s) \quad \forall s \in \mathcal{S} \\
+        v_{\pi_{k+1}}(s) &= v_{\pi_{k}}(s) \quad \forall s \in \mathcal{S} \implies \pi_{k} = \pi_{*}
+    \end{align*}
+    where $\pi_{k+1}$ is the next policy, given by policy improvement. \\
+    We improve the policy by considering the fact that if it is better to select an action $a^{*}$ in
+    a state $s$ once, then it is best to select $a^{*}$ in $s$ every time. According to the policy
+    improvement theorem, we change to policy $\pi_{k+1}$ because
+    \begin{align*}
+        v_{\pi_{k}}(s) &\leq q_{\pi_{k}}(s, \pi_{k+1}(s)) \quad \forall s \in \mathcal{S} \\
+        &= \mathbb{E}[R_{t+1} + \gamma v_{\pi_{k}}(S_{t+1}) | S_{t} = s, A_{t} = \pi_{k+1}(s)] \\
+        &= \mathbb{E}_{\pi_{k+1}}[R_{t+1} + \gamma v_{\pi_{k}}(S_{t+1}) | S_{t} = s]
+    \end{align*}
+    Now we use the fact that the state value of any state is at most the value of the best action in that
+    state. So, we have
+    \begin{align*}
+        v_{\pi_{k}}(S_{t+1}) &\leq q_{\pi_{k}}(S_{t+1}, \pi_{k+1}(S_{t+1})) \\
+        &= \mathbb{E}[R_{t+2} + \gamma v_{\pi}(S_{t+2}) | S_{t+1}, A_{t+1} = \pi_{k+1}(S_{t+1})] = \mathbb{E}[\cdots] \\
+        v_{\pi_{k}}(s) &\leq \mathbb{E}_{\pi_{k+1}}[R_{t+1} + \gamma q_{\pi_{k}}({S_{t+1}, \pi_{k+1}(S_{t+1})}) | S_{t} = s] \\
+        &= \mathbb{E}_{\pi_{k+1}}[R_{t+1} + \gamma \mathbb{E}[\cdots] | S_{t} = s] \\
+        &= \mathbb{E}_{\pi_{k+1}}[R_{t+1} + \gamma R_{t+2} + \gamma^{2} v_{\pi_{k}}(S_{t+2}) | S_{t} = s] \\
+        &\leq \mathbb{E}_{\pi_{k+1}}[R_{t+1} + \gamma R_{t+2} + \gamma^{2} R_{t+3} + \gamma^{3} v_{\pi_{k}}(S_{t+3}) | S_{t} = s] \\
+        &\leq \mathbb{E}_{\pi_{k+1}}[R_{t+1} + \gamma R_{t+2} + \gamma^{2} R_{t+3} + \gamma^{3} R_{t+4} + \cdots | S_{t} = s] \\
+        &= \mathbb{E}_{\pi_{k+1}}[G_{t} | S_{t} = s] = v_{\pi_{k+1}}(s)
+    \end{align*}
+    Therefore, we have shown that the value for all states under policy $\pi_{k+1}$ is greater than or equal
+    to the value for all states under policy $\pi_{k}$. This proves the first part of the claim. Now, suppose that
+    $v_{\pi_{k+1}}(s) = v_{\pi_{k}}(s) \quad \forall s \in \mathcal{S}$. Then, we have
+    \begin{align*}
+        v_{\pi_{k+1}}(s) &= \max_{a \in \mathcal{A}(s)} q_{\pi_{k}}(s, a) \\
+        &= \max_{a \in \mathcal{A}(s)} \mathbb{E}[R_{t+1} + \gamma v_{\pi_{k}}(S_{t+1}) | S_{t} = s, A_{t} = a] \\
+        &= \max_{a \in \mathcal{A}(s)} \mathbb{E}[R_{t+1} + \gamma v_{\pi_{k+1}}(S_{t+1}) | S_{t} = s, A_{t} = a]
+    \end{align*}
+    which is the Bellman Optimality Equation. Hence, if the policy does not improve, it is the optimal policy.
+
+    \section*{Question-18}
+    Problem too long to dump here.
+
+    \subsection*{Solution}
+    The given \textit{Stairwell} problem can be modelled as an MDP as follows. The set of states is
+    $\mathcal{S} = \{ \texttt{G}, \texttt{1}, \texttt{2}, \texttt{F} \}$. Since $\texttt{G}$ and
+    $\texttt{F}$ are terminal states, the set of actions in these states is
+    $\mathcal{A}(\texttt{G}) = \mathcal{A}(F) = \emptyset$. The set of actions in the other states is
+    $\mathcal{A}(\texttt{1}) = \mathcal{A}(\texttt{2}) = \{ \uparrow, \downarrow \}$. The MDP is
+    tabulated in Table \ref{tab:mdp-stairwell}.
+    \begin{table}[ht]
+        \centering
+        \renewcommand{\arraystretch}{1.25}
+        \begin{tabular}{lllc|c}
+            $s$ & $a$ & $s'$ & $r$ & $p(s', r | s, a)$ \\
+            \hline
+            \texttt{1} & $\uparrow$ & \texttt{2} & -1 & 1.0 \\
+            \texttt{1} & $\downarrow$ & \texttt{G} & +1 & 1.0 \\
+            \texttt{2} & $\uparrow$ & \texttt{F} & +4 & 1.0 \\
+            \texttt{2} & $\downarrow$ & \texttt{1} & +2 & 0.5 \\
+            \texttt{2} & $\downarrow$ & \texttt{1} & 0 & 0.5 \\
+        \end{tabular}
+        \caption{The MDP table for the \textit{Stairwell} Problem}
+        \label{tab:mdp-stairwell}
+    \end{table}
+    \vspace*{0pt} \\
+    Moreover, it is given that our initial policy, $\pi_{0}$, chooses to go up or down an equal probability of 0.5. \\
+    To find the optimal policy, we first find the state values. We use the Bellman equations to form linear
+    equations in the state values. This is the policy evaluation step.
+    $$v_{\pi_{k}}(\texttt{G}) = v_{\pi_{k}}(\texttt{F}) = 0 \quad \forall \ k$$
+    since the value of terminal states is zero by convention. The other equations are
+    \begin{align*}
+        v_{\pi_{0}}(\texttt{1}) &= \pi_{0}(\uparrow | \ \texttt{1}) \cdot ( -1 + v_{\pi_{0}}(\texttt{2}) ) \ p(\texttt{2}, -1 | \texttt{1}, \uparrow)
+        + \pi_{0}(\downarrow | \ \texttt{1}) \cdot ( +1 + v_{\pi_{0}}(\texttt{G}) ) \ p(\texttt{G}, +1 | \texttt{1}, \downarrow) \\
+        &= 0.5 \cdot ( -1 + v_{\pi_{0}}(\texttt{2}) ) + 0.5 \cdot ( +1  ) \\
+        &= -0.5 + 0.5 + 0.5 \ v_{\pi_{0}}(\texttt{2}) = 0.5 \ v_{\pi_{0}}(\texttt{2}) \\
+        v_{\pi_{0}}(\texttt{2}) &= \pi_{0}(\uparrow | \ \texttt{2}) \cdot ( +4 + v_{\pi_{0}}(\texttt{F}) ) \ p(\texttt{F}, +4 | \texttt{2}, \uparrow) \\
+        &+ \pi_{0}(\downarrow | \ \texttt{2}) \cdot [ ( +2 + v_{\pi_{0}}(\texttt{1}) ) \ p(\texttt{1}, +2 | \texttt{2}, \downarrow) +
+        ( 0 + v_{\pi_{0}}(\texttt{1}) ) \ p(\texttt{1}, 0 | \texttt{2}, \downarrow) ] \\
+        &= 0.5 \cdot ( +4 ) + 0.5 \cdot [ ( +2 + v_{\pi_{0}}(\texttt{1}) ) \cdot 0.5 + ( 0 + v_{\pi_{0}}(\texttt{1}) ) \cdot 0.5 ] \\
+        &= 2 + 0.5 \cdot ( +1 + v_{\pi_{0}}(\texttt{1}) ) \\
+        &= 2 + 0.5 + 0.5 \ v_{\pi_{0}}(\texttt{1}) = 2.5 + 0.5 \ v_{\pi_{0}}(\texttt{1})
+    \end{align*}
+    So, the Bellman equations give us the following linear equations
+    \begin{align*}
+        v_{\pi_{0}}(\texttt{1}) &= 0.5 \ v_{\pi_{0}}(\texttt{2}) \\
+        v_{\pi_{0}}(\texttt{2}) &= 2.5 + 0.5 \ v_{\pi_{0}}(\texttt{1})
+    \end{align*}
+    This system of linear equations can be solved to get $v_{\pi_{0}}(\texttt{1}) = 1.667$ and $v_{\pi_{0}}(\texttt{2}) = 3.334$.
+    Now, to improve to a policy $\pi_{1}$, we select the action that provides the highest value in each state.
+    This is the policy improvement step.
+    \begin{align*}
+        \pi_{1}(\texttt{1}) &= \underset{a \in \mathcal{A}(\texttt{1})}{\mathrm{argmax}} \begin{cases}
+            \uparrow \ : & -1 + v_{\pi_{0}}(\texttt{2}) = 2.334 \\
+            \downarrow \ : & +1 + v_{\pi_{0}}(\texttt{G}) = 1
+        \end{cases} \\
+        &= \ \uparrow \\
+        \pi_{1}(\texttt{2}) &= \underset{a \in \mathcal{A}(\texttt{2})}{\mathrm{argmax}} \begin{cases}
+            \uparrow \ : & +4 + v_{\pi_{0}}(\texttt{F}) = 4 \\
+            \downarrow \ : & (+2 + v_{\pi_{0}}(\texttt{1})) \cdot 0.5 + (0 + v_{\pi_{0}}(\texttt{1})) \cdot 0.5 = 2.667
+        \end{cases} \\
+        &= \ \uparrow
+    \end{align*}
+    This completes one full cycle of policy iteration. We now use the Bellman equations to find the state values for the new policy
+    $\pi_{1}$. This is again, the policy evaluation step for the new policy, $\pi_{1}$. These are
+    \begin{align*}
+        v_{\pi_{1}}(\texttt{1}) &= \pi_{1}(\uparrow | \ \texttt{1}) \cdot ( -1 + v_{\pi_{1}}(\texttt{2}) ) \ p(\texttt{2}, -1 | \texttt{1}, \uparrow) \\
+        &= 1 \cdot ( -1 + v_{\pi_{1}}(\texttt{2}) ) + 0 \cdot ( +1  ) \\
+        &= -1 + v_{\pi_{1}}(\texttt{2}) \\
+        v_{\pi_{1}}(\texttt{2}) &= \pi_{1}(\uparrow | \ \texttt{2}) \cdot ( +4 + v_{\pi_{1}}(\texttt{F}) ) \ p(\texttt{F}, +4 | \texttt{2}, \uparrow) \\
+        &= 1 \cdot ( +4 ) + 0 \cdot [ ( +2 + v_{\pi_{1}}(\texttt{1}) ) \cdot 0.5 + ( 0 + v_{\pi_{1}}(\texttt{1}) ) \cdot 0.5 ] \\
+        &= 4 \\
+        \implies v_{\pi_{1}}(\texttt{1}) &= 3
+    \end{align*}
+    And to improve to a policy $\pi_{2}$, we select the greedy action (policy improvement step). This gives us
+    \begin{align*}
+        \pi_{2}(\texttt{1}) &= \underset{a \in \mathcal{A}(\texttt{1})}{\mathrm{argmax}} \begin{cases}
+            \uparrow \ : & -1 + v_{\pi_{1}}(\texttt{2}) = 3 \\
+            \downarrow \ : & +1 + v_{\pi_{1}}(\texttt{G}) = 1
+        \end{cases} \\
+        &= \ \uparrow \\
+        \pi_{2}(\texttt{2}) &= \underset{a \in \mathcal{A}(\texttt{2})}{\mathrm{argmax}} \begin{cases}
+            \uparrow \ : & +4 + v_{\pi_{1}}(\texttt{F}) = 4 \\
+            \downarrow \ : & (+2 + v_{\pi_{1}}(\texttt{1})) \cdot 0.5 + (0 + v_{\pi_{1}}(\texttt{1})) \cdot 0.5 = 4
+        \end{cases} \\
+        &= \ \uparrow
+    \end{align*}
+    We see that the policy $\pi_{2} = \pi_{1}$, so, by the Policy Improvement Theorem, we have found the optimal policy.
+    The optimal policy is actually
+    $$\pi_{*}(s) = \ \uparrow \quad \forall \ s \in \mathcal{S} \setminus \mathcal{S}^{+}$$
+    Here, $n = 2$, and we cnverged to the optimal policy in 2 iterations. As $n$ increases, it is expected that the number
+    of iterations till convergence will increase by a factor of $n$, i.e. we converge in $O(n)$ iterations.
+
+    \section*{Question-19 to Question-22}
+    Problem setting too long to dump here.
+
+    \subsection*{Solution-19}
+    The given problem can be modelled as an MDP as follows. The set of states and actions are
+    \begin{align*}
+        \mathcal{S} &= \{ \texttt{healthy}, \texttt{sick} \} \\
+        \mathcal{A(\texttt{healthy})} &= \{ \texttt{go-out}, \texttt{stay-home} \} \\
+        \mathcal{A(\texttt{sick})} &= \{ \texttt{take-med}, \texttt{no-med} \}
+    \end{align*}
+    The MDP is tabulated in Table \ref{tab:mdp-sick-healthy}. For all the following parts, we use
+    the value $\gamma = 0.9$ for the discounting factor. First, we note that we are given $p(r | s, a, s')$
+    and $p(s' | s, a)$. We can use this to find $p(s', r | s, a)$ using the following equations.
+    \begin{align*}
+        p(r | s, a, s') &= \frac{p(s', r, s, a)}{p(s, a, s')} \\
+        &= \frac{p(s', r | s, a) \cdot p(s, a)}{p(s' | s, a) \cdot p(s, a)} \\
+        \implies p(s', r | s, a) &= p(r | s, a, s') \cdot p(s' | s, a)
+    \end{align*}
+    \begin{table}[ht]
+        \centering
+        \renewcommand{\arraystretch}{1.25}
+        \begin{tabular}{lllc|c|c|c}
+            $s$ & $a$ & $s'$ & $r$ & $p(r | s, a, s')$ & $p(s' | s, a)$ & $p(s', r | s, a)$ \\
+            \hline
+            \texttt{healthy} & \texttt{go-out} & \texttt{healthy} & 0 & 0.1 & 0.7 & 0.07 \\
+            \texttt{healthy} & \texttt{go-out} & \texttt{healthy} & +20 & 0.9 & 0.7 & 0.63 \\
+            \texttt{healthy} & \texttt{go-out} & \texttt{sick} & 0 & 0.1 & 0.3 & 0.03 \\
+            \texttt{healthy} & \texttt{go-out} & \texttt{sick} & -10 & 0.9 & 0.3 & 0.27 \\
+            \texttt{healthy} & \texttt{stay-home} & \texttt{healthy} & 0 & 0.05 & 0.95 & 0.0475 \\
+            \texttt{healthy} & \texttt{stay-home} & \texttt{healthy} & +10 & 0.95 & 0.95 & 0.9025 \\
+            \texttt{healthy} & \texttt{stay-home} & \texttt{sick} & 0 & 0.1 & 0.05 & 0.005 \\
+            \texttt{healthy} & \texttt{stay-home} & \texttt{sick} & -10 & 0.9 & 0.05 & 0.045 \\
+            \texttt{sick} & \texttt{take-med} & \texttt{healthy} & -1 & 1.0 & 0.9 & 0.9 \\
+            \texttt{sick} & \texttt{take-med} & \texttt{sick} & -2 & 1.0 & 0.1 & 0.1 \\
+            \texttt{sick} & \texttt{no-med} & \texttt{healthy} & 0 & 1.0 & 0.6 & 0.6 \\
+            \texttt{sick} & \texttt{no-med} & \texttt{sick} & -1 & 1.0 & 0.4 & 0.4 \\
+        \end{tabular}
+        \caption{The MDP table for the Sick-Healthy Person Problem}
+        \label{tab:mdp-sick-healthy}
+    \end{table}
+
+    \subsection*{Solution-20}
+    We are required to consider a policy that picks all actions in each state with equal probability.
+    So, we have
+    \begin{align*}
+        \pi(\texttt{go-out} \ | \ \texttt{healthy}) = \pi(\texttt{stay-home} \ | \ \texttt{healthy}) &= 0.5 \\
+        \pi(\texttt{take-med} \ | \ \texttt{sick}) = \pi(\texttt{no-med} \ | \ \texttt{sick}) &= 0.5
+    \end{align*}
+    To find the value for the policy, we need to calculate the state values of both states with
+    respect to the policy. We use the Bellman equations to form linear equations in the state values.
+    \begin{align*}
+        v_{\pi}(\texttt{H}) &= \pi(\texttt{GO} \ | \ \texttt{H}) \sum_{s', r} \left[ r + \gamma v_{\pi}(s') \right] p(s', r \ | \ \texttt{H}, \texttt{GO})
+        + \pi(\texttt{SH} \ | \ \texttt{H}) \sum_{s', r} \left[ r + \gamma v_{\pi}(s') \right] p(s', r \ | \ \texttt{H}, \texttt{SH}) \\
+        &= 0.5 \cdot \Big{[} 0.9 v_{\pi}(\texttt{H}) \cdot 0.07 + (20 + 0.9 v_{\pi}(\texttt{H})) \cdot 0.63 + 0.9 v_{\pi}(\texttt{S}) \cdot 0.03 + (-10 + 0.9 v_{\pi}(\texttt{S})) \cdot 0.27 \Big{]} \\
+        &+ 0.5 \cdot \Big{[} 0.9 v_{\pi}(\texttt{H}) \cdot 0.0475 + (10 + 0.9 v_{\pi}(\texttt{H})) \cdot 0.9025 + 0.9 v_{\pi}(\texttt{S}) \cdot 0.005 + (-10 + 0.9 v_{\pi}(\texttt{S})) \cdot 0.045 \Big{]} \\
+        &= 0.5 \cdot \Big{[}0.063 v_{\pi}(\texttt{H}) + 12.6 + 0.567 v_{\pi}(\texttt{H}) + 0.027 v_{\pi}(\texttt{S}) - 2.7 + 0.243 v_{\pi}(\texttt{S}) \Big{]} \\
+        &+ 0.5 \cdot \Big{[}0.04275 v_{\pi}(\texttt{H}) + 9.025 + 0.81225 v_{\pi}(\texttt{H}) + 0.0045 v_{\pi}(\texttt{S}) - 0.45 + 0.0405 v_{\pi}(\texttt{S}) \Big{]} \\
+        &= 0.0315 v_{\pi}(\texttt{H}) + 6.3 + 0.2835 v_{\pi}(\texttt{H}) + 0.0135 v_{\pi}(\texttt{S}) - 1.35 + 0.1215 v_{\pi}(\texttt{S}) \\
+        &+ 0.021375 v_{\pi}(\texttt{H}) + 4.5125 + 0.406125 v_{\pi}(\texttt{H}) + 0.00225 v_{\pi}(\texttt{S}) - 0.225 + 0.02025 v_{\pi}(\texttt{S}) \\
+        &= 0.7425 v_{\pi}(\texttt{H}) + 0.15775 v_{\pi}(\texttt{S}) + 9.2375
+    \end{align*}
+    \begin{align*}
+        v_{\pi}(\texttt{S}) &= \pi(\texttt{TM} \ | \ \texttt{S}) \sum_{s', r} \left[ r + \gamma v_{\pi}(s') \right] p(s', r \ | \ \texttt{S}, \texttt{TM})
+        + \pi(\texttt{NM} \ | \ \texttt{S}) \sum_{s', r} \left[ r + \gamma v_{\pi}(s') \right] p(s', r \ | \ \texttt{S}, \texttt{NM}) \\
+        &= 0.5 \cdot \Big{[} (-1 + 0.9 v_{\pi}(\texttt{H})) \cdot 0.9 + (-2 + 0.9 v_{\pi}(\texttt{S})) \cdot 0.1 \Big{]} \\
+        &+ 0.5 \cdot \Big{[} 0.9 v_{\pi}(\texttt{H}) \cdot 0.6 + (-1 + 0.9 v_{\pi}(\texttt{S})) \cdot 0.4 \Big{]} \\
+        &= -0.45 + 0.405 v_{\pi}(\texttt{H}) - 0.1 + 0.045 v_{\pi}(\texttt{S}) + 0.27 v_{\pi}(\texttt{H}) - 0.2 + 0.18 v_{\pi}(\texttt{S}) \\
+        &=0.675 v_{\pi}(\texttt{H}) + 0.225 v_{\pi}(\texttt{S}) - 0.75
+    \end{align*}
+    Therefore, the two Bellman Equations give us the following linear equations
+    \begin{align*}
+        0.2575 v_{\pi}(\texttt{H}) - 0.15775 v_{\pi}(\texttt{S}) &= 9.2375 \\
+        0.675 v_{\pi}(\texttt{H}) - 0.775 v_{\pi}(\texttt{S}) &= 0.75
+    \end{align*}
+    Solving these equations, we get $v_{\pi}(\texttt{healthy}) = 75.641$ and $v_{\pi}(\texttt{sick}) = 64.913$.
+
+    \subsection*{Solution-21}
+    To find the expected return $\mathbb{E}[G_{t} | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}]$, we use the following
+    \begin{align*}
+        \mathbb{E}[G_{t} | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] &= \mathbb{E}[R_{t+1} + \gamma v_{\pi}(S_{t+1}) | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] \\
+        &= \mathbb{E}[R_{t+1} | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] + \gamma \cdot \mathbb{E}[v_{\pi}(S_{t+1}) | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] \\
+        \vspace*{0pt} \\
+        \mathbb{E}[v_{\pi}(S_{t+1}) | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] &= \mathbb{E}\left[ \sum_{i=0}^{\infty} \gamma^{i} R_{t+2+i} \ \Big| \ S_{t} = \texttt{H}, S_{t+1} = \texttt{S} \right] \\
+        &= \mathbb{E}\left[ \sum_{i=0}^{\infty} \gamma^{i} R_{t+2+i} \ \Big| \ S_{t+1} = \texttt{S} \right] \\
+        &= v_{\pi}(\texttt{S})
+    \end{align*}
+    \begin{align*}
+        \mathbb{E}[R_{t+1} | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] &= \sum_{r} r P[R_{t+1} = r | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] \\
+        &= \sum_{a \in \mathcal{A}(\texttt{H}), r} r P[R_{t+1} = r | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}, A_{t} = a] P[A_{t} = a | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] \\
+        &= \sum_{a \in \mathcal{A}(\texttt{H}), r} r \ \frac{P[S_{t+1} = \texttt{S}, R_{t+1} = r | S_{t} = \texttt{H}, A_{t} = a]}{P[S_{t+1} = \texttt{S} | S_{t} = \texttt{H}, A_{t} = a]} \ P[A_{t} = a | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] \\
+        &= \sum_{a \in \mathcal{A}(\texttt{H}), r} r \ \frac{p(\texttt{S}, r \ | \ \texttt{H}, a)}{p(\texttt{S} \ | \ \texttt{H}, a)} \ P[A_{t} = a | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}]
+    \end{align*}
+    Next, we simplify the conditional probability of action $A_{t} = a$ conditioned on the states $S_{t} = \texttt{H}$ and $S_{t+1} = \texttt{S}$.
+    \begin{align*}
+        P[A_{t} = a | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] &= \frac{P[A_{t} = a, S_{t+1} = \texttt{S} | S_{t} = \texttt{H}]}{P[S_{t+1} = \texttt{S} | S_{t} = \texttt{H}]} \\
+        &= \frac{P[A_{t} = a | S_{t} = \texttt{H}] \ P[S_{t+1} = \texttt{S} | S_{t} = \texttt{H}, A_{t} = a]}{\sum_{\hat{a} \in \mathcal{A}(\texttt{H})} P[A_{t} = a, S_{t+1} = \texttt{S} | S_{t} = \texttt{H}]} \\
+        &= \frac{\pi(a \ | \ \texttt{H}) \ p(\texttt{S} \ | \ \texttt{H}, a)}{\sum_{\hat{a} \in \mathcal{A}(\texttt{H})} \pi(\hat{a} \ | \ \texttt{H}) \ p(\texttt{S} \ | \ \texttt{H}, \hat{a})} \\
+        &= \frac{p(\texttt{S} \ | \ \texttt{H}, a)}{p(\texttt{S} \ | \ \texttt{H}, \texttt{GO}) + p(\texttt{S} \ | \ \texttt{H}, \texttt{SH})} \quad \text{ since $\pi$ is an equiprobable random policy} \\
+        &= \frac{p(\texttt{S} \ | \ \texttt{H}, a)}{0.3 + 0.05} = \frac{p(\texttt{S} \ | \ \texttt{H}, a)}{0.35}
+    \end{align*}
+    So, we get the following expression for the conditional expectation of reward $R_{t+1} = r$ conditioned on the states $S_{t} = \texttt{H}$ and $S_{t+1} = \texttt{S}$
+    \begin{align*}
+        \mathbb{E}[R_{t+1} | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] &= \sum_{a \in \mathcal{A}(\texttt{H})} \frac{P[A_{t} = a | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}]}{p(\texttt{S} \ | \ \texttt{H}, a)} \sum_{r} r \ p(\texttt{S}, r \ | \ \texttt{H}, a) \\
+        &= \sum_{a \in \mathcal{A}(\texttt{H})} \frac{p(\texttt{S} \ | \ \texttt{H}, a)}{0.35 \cdot p(\texttt{S} \ | \ \texttt{H}, a)} \sum_{r} r \ p(\texttt{S}, r \ | \ \texttt{H}, a) \\
+        &= \frac{1}{0.35} \sum_{a \in \mathcal{A}(\texttt{H})} \sum_{r} r \ p(\texttt{S}, r \ | \ \texttt{H}, a) \\
+    \end{align*}
+    Hence, the final expression and value for the required conditional return is
+    \begin{align*}
+        \mathbb{E}[G_{t} | S_{t} = \texttt{H}, S_{t+1} = \texttt{S}] &= \gamma v_{\pi}(\texttt{S}) + \frac{1}{0.35} \sum_{a \in \mathcal{A}(\texttt{H})} \sum_{r} r \ p(\texttt{S}, r \ | \ \texttt{H}, a) \\
+        &= 0.9 \cdot 64.913 + \frac{1}{0.35} \left[ \left(\sum_{r} r \ p(\texttt{S}, r \ | \ \texttt{H}, \texttt{GO}) \right) + \left(\sum_{r} r \ p(\texttt{S}, r \ | \ \texttt{H}, \texttt{SH}) \right)\right] \\
+        &= 58.4217 + \frac{1}{0.35} \left[ (-10 \cdot 0.27) + (-10 \cdot 0.045) \right] \\
+        &= 58.4217 - \frac{3.15}{0.35} = 58.4217 - 9 = 49.4217
+    \end{align*}
+
+    \subsection*{Solution-22}
+    We are required to find the optimal policy $\pi_{*}$ and the optimal state values $v_{*}(s)$ for all states.
+    This is done through Policy iteration, with a maximum of three iterations. We start with the equiprobable
+    random policy $\pi_{0}$, which is the same as the policy used in the previous solutions. \\
+    We first find $v_{\pi_{0}}(s)$ for the states. This is the policy evaluation step. From Solution-20, we have
+    \begin{align*}
+        v_{\pi_{0}}(\texttt{H}) &= 75.641 \\
+        v_{\pi_{0}}(\texttt{S}) &= 64.913
+    \end{align*}
+    Now, we improve the policy to $\pi_{1}$ by selecting the greedy action in each state. This is the policy improvement step.
+    \begin{align*}
+        \pi_{1}(\texttt{H}) &= \underset{a \in \mathcal{A}(\texttt{H})}{\mathrm{argmax}} \begin{cases}
+            \texttt{GO} : & (0 + 0.9 v_{\pi_{0}}(\texttt{H})) \cdot 0.07 + (+20 + 0.9 v_{\pi_{0}}(\texttt{H})) \cdot 0.63 \\
+            &+ (0 + 0.9 v_{\pi_{0}}(\texttt{S})) \cdot 0.03 + (-10 + 0.9 v_{\pi_{0}}(\texttt{S})) \cdot 0.027 \\
+            &= 63.315 \\
+            \texttt{SH} : & (0 + 0.9 v_{\pi_{0}}(\texttt{H})) \cdot 0.0475 + (+10 + 0.9 v_{\pi_{0}}(\texttt{H})) \cdot 0.9025 \\
+            &+ (0 + 0.9 v_{\pi_{0}}(\texttt{S})) \cdot 0.005 + (-10 + 0.9 v_{\pi_{0}}(\texttt{S})) \cdot 0.045 \\
+            &= 74.641
+        \end{cases} \\
+        &= \ \texttt{SH} \\
+        \pi_{1}(\texttt{S}) &= \underset{a \in \mathcal{A}(\texttt{S})}{\mathrm{argmax}} \begin{cases}
+            \texttt{TM} : & (-1 + 0.9 v_{\pi_{0}}(\texttt{H})) \cdot 0.9 + (-2 + 0.9 v_{\pi_{0}}(\texttt{S})) \cdot 0.1 = 66.011 \\
+            \texttt{NM} : & (0 + 0.9 v_{\pi_{0}}(\texttt{H})) \cdot 0.6 + (-1 + 0.9 v_{\pi_{0}}(\texttt{S})) \cdot 0.4 = 63.815
+        \end{cases} \\
+        &= \ \texttt{TM}
+    \end{align*}
+    This means that our deterministic policy is
+    \begin{align*}
+        \pi_{1}(\texttt{H}) &= \texttt{SH} \\
+        \pi_{1}(\texttt{S}) &= \texttt{TM}
+    \end{align*}
+    Now, we evaluate the updated/improved policy $\pi_{1}$ to get $v_{\pi_{1}}(s)$. This is the policy evaluation step in the second
+    iteration. We get the following equations for our deterministic policy.
+    \begin{align*}
+        v_{\pi_{1}}(\texttt{H}) &= \pi(\texttt{SH} \ | \ \texttt{H}) \sum_{s', r} \left[ r + \gamma v_{\pi_{1}}(s') \right] p(s', r \ | \ \texttt{H}, \pi(\texttt{H}))
+        = \sum_{s', r} \left[ r + \gamma v_{\pi_{1}}(s') \right] p(s', r \ | \ \texttt{H}, \texttt{SH}) \\
+        &= (0 + 0.9 v_{\pi_{1}}(\texttt{H})) \cdot 0.0475 + (+10 + 0.9 v_{\pi_{1}}(\texttt{H})) \cdot 0.9025 \\
+        &+ (0 + 0.9 v_{\pi_{1}}(\texttt{S})) \cdot 0.005 + (-10 + 0.9 v_{\pi_{1}}(\texttt{S})) \cdot 0.045 \\
+        &= 0.04275 v_{\pi_{1}}(\texttt{H}) + 9.025 + 0.81225 v_{\pi_{1}}(\texttt{H}) + 0.0045 v_{\pi_{1}}(\texttt{S}) - 0.45 + 0.0405 v_{\pi_{1}}(\texttt{S}) \\
+        &= 0.855 v_{\pi_{1}}(\texttt{H}) + 0.045 v_{\pi_{1}}(\texttt{S}) + 8.575 \\
+        v_{\pi_{1}}(\texttt{S}) &= \pi(\texttt{TM} \ | \ \texttt{S}) \sum_{s', r} \left[ r + \gamma v_{\pi_{1}}(s') \right] p(s', r \ | \ \texttt{S}, \pi(\texttt{S}))
+        = \sum_{s', r} \left[ r + \gamma v_{\pi_{1}}(s') \right] p(s', r \ | \ \texttt{S}, \texttt{TM}) \\
+        &= (-1 + 0.9 v_{\pi_{1}}(\texttt{H})) \cdot 0.9 + (-2 + 0.9 v_{\pi_{1}}(\texttt{S})) \cdot 0.1 \\
+        &= -0.9 + 0.81 v_{\pi_{1}}(\texttt{H}) - 0.2 + 0.09 v_{\pi_{1}}(\texttt{S}) \\
+        &= 0.81 v_{\pi_{1}}(\texttt{H}) + 0.09 v_{\pi_{1}}(\texttt{S}) - 1.1
+    \end{align*}
+    Therefore, the two Bellman Equations give us the following linear equations
+    \begin{align*}
+        0.145 v_{\pi_{1}}(\texttt{H}) - 0.045 v_{\pi_{1}}(\texttt{S}) &= 8.575 \\
+        0.81 v_{\pi_{1}}(\texttt{H}) - 0.91 v_{\pi_{1}}(\texttt{S}) &= 1.1
+    \end{align*}
+    Solving these equations, we get $v_{\pi_{1}}(\texttt{healthy}) = 81.191$ and $v_{\pi_{1}}(\texttt{sick}) = 71.060$. Now, we improve
+    the policy to $\pi_{2}$ by selecting the greedy action in each state. This is the policy improvement step of iteration 2.
+    \begin{align*}
+        \pi_{2}(\texttt{H}) &= \underset{a \in \mathcal{A}(\texttt{H})}{\mathrm{argmax}} \begin{cases}
+            \texttt{GO} : & (0 + 0.9 v_{\pi_{1}}(\texttt{H})) \cdot 0.07 + (+20 + 0.9 v_{\pi_{1}}(\texttt{H})) \cdot 0.63 \\
+            &+ (0 + 0.9 v_{\pi_{1}}(\texttt{S})) \cdot 0.03 + (-10 + 0.9 v_{\pi_{1}}(\texttt{S})) \cdot 0.027 \\
+            &= 67.125 \\
+            \texttt{SH} : & (0 + 0.9 v_{\pi_{1}}(\texttt{H})) \cdot 0.0475 + (+10 + 0.9 v_{\pi_{1}}(\texttt{H})) \cdot 0.9025 \\
+            &+ (0 + 0.9 v_{\pi_{1}}(\texttt{S})) \cdot 0.005 + (-10 + 0.9 v_{\pi_{1}}(\texttt{S})) \cdot 0.045 \\
+            &= 81.191
+        \end{cases} \\
+        &= \ \texttt{SH} \\
+        \pi_{2}(\texttt{S}) &= \underset{a \in \mathcal{A}(\texttt{S})}{\mathrm{argmax}} \begin{cases}
+            \texttt{TM} : & (-1 + 0.9 v_{\pi_{1}}(\texttt{H})) \cdot 0.9 + (-2 + 0.9 v_{\pi_{1}}(\texttt{S})) \cdot 0.1 = 71.060 \\
+            \texttt{NM} : & (0 + 0.9 v_{\pi_{1}}(\texttt{H})) \cdot 0.6 + (-1 + 0.9 v_{\pi_{1}}(\texttt{S})) \cdot 0.4 = 69.024
+        \end{cases} \\
+        &= \ \texttt{TM}
+    \end{align*}
+    This clearly indicates that the policies $\pi_{1} = \pi_{2}$. So, by the Policy Improvement Theorem, we have found the optimal policy.
+    Therefore, the optimal value function and policy are
+    \begin{align*}
+        v_{*}(s) &= \begin{cases}
+            81.191 & \text{ if } s = \texttt{H} \\
+            71.060 & \text{ if } s = \texttt{S}
+        \end{cases} \\
+        \pi_{*}(s) &= \begin{cases}
+            \texttt{SH} & \text{ if } s = \texttt{H} \\
+            \texttt{TM} & \text{ if } s = \texttt{S}
+        \end{cases}
+    \end{align*}
+
+\end{document}
